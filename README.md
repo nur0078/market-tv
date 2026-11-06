@@ -13,7 +13,9 @@ All market data comes from **TradingView's free embeddable widgets**. Nothing on
 | Australia 200 chart, global indices | `OANDA:` index CFDs | Streaming. Indicative CFD prices, **not** the official index |
 | Govt yields, AU vs US 10Y chart, 2Y "front end" charts | `TVC:` yields | Streaming |
 | ASX 200 heatmap | ASX via TradingView | **Delayed** (exchange rules) |
-| Event calendar, RBA/Fed rates & votes | Hand-entered in `CONFIG` | Update after each meeting |
+| RBA cash rate, last move, vote, next meeting | rba.gov.au (cash-rate table, statement, calendar) | Refreshed every 30 min |
+| Fed target range, EFFR, last move, vote, next FOMC | NY Fed Markets API + federalreserve.gov | Refreshed every 30 min |
+| Economic calendar (forecast / previous) | ForexFactory free weekly feed + RBA/FOMC schedules | Refreshed every 30 min |
 
 TradingView's widget FAQ says exchanges require websites to pay for real-time data, so widgets stream **delayed** exchange data, while **forex and crypto are real-time**. That's why the index panels use broker CFD prices. They track the market live but aren't the official exchange print.
 
@@ -21,10 +23,14 @@ The free widgets are licensed with TradingView branding ("Charts & quotes by Tra
 
 ## Run it
 
-1. Merge this PR, then **Settings → Pages → Deploy from branch → `main` / root**.
-2. Open the Pages URL on the TV and press **F** for fullscreen.
+1. Merge this PR.
+2. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
+3. **Actions → "Build & deploy board" → Run workflow** once. After that it runs by itself every 30 minutes.
+4. Open the Pages URL (`https://nur0078.github.io/market-tv/`) on the TV and press **F** for fullscreen.
 
-It scales from 1080p to 4K. Below 1180px wide it reflows into a scrolling page.
+The workflow (`.github/workflows/pages.yml`) runs `scripts/fetch_data.py`, which pulls the official sources and writes `data/policy.json` + `data/calendar.json` next to the page. The page re-reads them every 5 minutes. Nothing about rates, votes, meetings or events is hardcoded.
+
+If a source fails or changes its page layout, the last good value is kept and the board shows it in amber as **STALE · as of …** rather than presenting it as current. Opening `index.html` straight from disk shows "No data", because the data files only exist on the deployed site.
 
 ## Panels
 
@@ -54,6 +60,6 @@ Everything is in `CONFIG.symbols` at the top of the script, in TradingView's `EX
 
 ## Maintenance
 
-- **After each RBA / Fed meeting:** update `CONFIG.policy` (rate, last move, vote, next date).
-- **Monthly:** extend `CONFIG.events` (times in UTC).
-- **TV housekeeping:** 1–2px burn-in shift every 2 min, full reload every 6h, cursor hides after 3s.
+None for data. If the panel shows STALE for more than an hour, open the latest run under **Actions** and read the log. It will name the source that failed.
+
+TV housekeeping is built in: 1–2px burn-in shift every 2 min, full reload every 6h, cursor hides after 3s.

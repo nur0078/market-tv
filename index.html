@@ -217,7 +217,7 @@ body.idle{ cursor: none; }
 
   <main class="board" id="board">
     <section class="w" data-w="next">
-      <div class="w-h"><div><span class="kicker">01 · Event risk</span><h2>Next on <em>the tape</em></h2></div><div class="meta">High impact<br>times AEDT</div></div>
+      <div class="w-h"><div><span class="kicker">01 · Event risk</span><h2>Next on <em>the tape</em></h2></div><div class="meta">High impact · AEDT<br>ForexFactory · RBA · Fed</div></div>
       <div class="next-hero">
         <div class="flaps" id="codeFlaps" aria-hidden="true"></div>
         <div><div class="next-title" id="nextTitle">—</div><div class="next-sub" id="nextSub">—</div></div>
@@ -227,7 +227,7 @@ body.idle{ cursor: none; }
     </section>
 
     <section class="w" data-w="policy">
-      <div class="w-h"><div><span class="kicker">02 · Central banks</span><h2>Policy <em>&amp; the front end</em></h2></div><div class="meta">Official rate · last move<br>2Y yield, intraday</div></div>
+      <div class="w-h"><div><span class="kicker">02 · Central banks</span><h2>Policy <em>&amp; the front end</em></h2></div><div class="meta" id="polMeta">Official sources</div></div>
       <div class="cbs" id="cbs"></div>
     </section>
 
@@ -296,29 +296,13 @@ const CONFIG = {
     rba2y: 'TVC:AU02Y', fed2y: 'TVC:US02Y',
   },
 
-  // Official rates — update after each meeting.
-  policy: [
-    { k:'RBA', full:'Cash rate target', rate:'4.85', last:'<b>+25bp</b> · 3 Nov · 6–3 vote', next:'2026-12-08T03:30Z', nextLbl:'8 Dec', color:'var(--au)', mkt:'rba2y', mktLbl:'ACGB 2Y · market pricing' },
-    { k:'FED', full:'Fed funds target', rate:'3.75–4.00', last:'<b>Hold</b> · 28 Oct · 10–2 vote', next:'2026-12-09T19:00Z', nextLbl:'9 Dec (US)', color:'var(--us)', mkt:'fed2y', mktLbl:'UST 2Y · market pricing' },
-  ],
-
-  // Calendar — times in UTC. Codes ≤ 8 chars (split-flap).
-  events: [
-    { t:'2026-11-06T13:30Z', c:'US', code:'US NFP',   name:'Nonfarm payrolls (Oct)',        imp:'high', desk:'FI·EQ' },
-    { t:'2026-11-09T01:30Z', c:'CN', code:'CN CPI',   name:'China CPI (Oct)',               imp:'med',  desk:'EQ' },
-    { t:'2026-11-10T00:30Z', c:'AU', code:'AU NAB',   name:'NAB business survey (Oct)',     imp:'med',  desk:'FI·EQ' },
-    { t:'2026-11-10T13:30Z', c:'US', code:'US CPI',   name:'CPI (Oct)',                     imp:'high', desk:'FI·EQ' },
-    { t:'2026-11-12T07:00Z', c:'UK', code:'UK GDP',   name:'UK GDP (Q3, first est.)',       imp:'med',  desk:'FI' },
-    { t:'2026-11-13T13:30Z', c:'US', code:'US PPI',   name:'PPI (Oct)',                     imp:'med',  desk:'FI' },
-    { t:'2026-11-17T13:30Z', c:'US', code:'US RETL',  name:'Retail sales (Oct)',            imp:'med',  desk:'FI·EQ' },
-    { t:'2026-11-18T19:00Z', c:'US', code:'FOMC MIN', name:'FOMC minutes (27–28 Oct)',      imp:'med',  desk:'FI' },
-    { t:'2026-11-19T00:30Z', c:'AU', code:'AU JOBS',  name:'Labour force (Oct)',            imp:'high', desk:'FI·EQ' },
-    { t:'2026-11-25T00:30Z', c:'AU', code:'AU CPI',   name:'Monthly CPI (Oct)',             imp:'high', desk:'FI·EQ' },
-    { t:'2026-11-25T13:30Z', c:'US', code:'US PCE',   name:'GDP 2nd est. (Q3) · PCE (Oct)', imp:'high', desk:'FI' },
-    { t:'2026-12-04T13:30Z', c:'US', code:'US NFP',   name:'Nonfarm payrolls (Nov)',        imp:'high', desk:'FI·EQ' },
-    { t:'2026-12-08T03:30Z', c:'AU', code:'RBA',      name:'RBA cash rate decision',        imp:'high', desk:'FI·EQ' },
-    { t:'2026-12-09T19:00Z', c:'US', code:'FOMC',     name:'FOMC decision + projections',   imp:'high', desk:'FI·EQ' },
-    { t:'2026-12-10T13:30Z', c:'US', code:'US CPI',   name:'CPI (Nov)',                     imp:'high', desk:'FI·EQ' },
+  // Presentation only — the rates, moves, votes, meeting dates and calendar
+  // all come from data/policy.json + data/calendar.json (built every 30 min by
+  // .github/workflows/pages.yml from the RBA, the Fed, the NY Fed and ForexFactory).
+  dataUrl: 'data/', dataRefreshMin: 5, staleAfterHours: 2,
+  banks: [
+    { k:'rba', label:'RBA', full:'Cash rate target', color:'var(--au)', mkt:'rba2y', mktLbl:'ACGB 2Y · market pricing' },
+    { k:'fed', label:'FED', full:'Fed funds target', color:'var(--us)', mkt:'fed2y', mktLbl:'UST 2Y · market pricing' },
   ],
 };
 
@@ -365,22 +349,48 @@ function embedAll(){
     blockColor: 'change', symbolUrl: '', hasTopBar: false, isDataSetEnabled: false, isZoomEnabled: false, hasSymbolTooltip: false,
     isMonoSize: false, width: '100%', height: '100%' });
   embed('fx', 'tickers', { ...COMMON, showSymbolLogo: false, symbols: S.fx.map(([s, t]) => ({ proName: s, title: t })) });
-  CONFIG.policy.forEach(p => embed('mkt-' + p.k, 'mini-symbol-overview', mini(S[p.mkt], p.k === 'RBA' ? 'rgb(204, 122, 18)' : 'rgb(76, 147, 218)')));
+  CONFIG.banks.forEach(b => embed('mkt-' + b.k, 'mini-symbol-overview', mini(S[b.mkt], b.k === 'rba' ? 'rgb(204, 122, 18)' : 'rgb(76, 147, 218)')));
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   Policy (static facts) + market 2Y mini charts
+   Live data: data/policy.json + data/calendar.json (no hardcoded values)
    ════════════════════════════════════════════════════════════════════════ */
-function buildPolicy(){
-  $('#cbs').innerHTML = CONFIG.policy.map(p => `
+const DATA = { policy: null, events: [], calOk: false, calAsOf: null, err: null };
+async function loadData(){
+  const get = n => fetch(CONFIG.dataUrl + n + '?ts=' + Date.now(), { cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(n + ' ' + r.status); return r.json(); });
+  try { DATA.policy = await get('policy.json'); } catch(e){ DATA.err = e.message; }
+  try { const c = await get('calendar.json'); DATA.events = c.events || []; DATA.calOk = c.ok; DATA.calAsOf = c.asOf; } catch(e){ DATA.err = e.message; }
+  renderPolicy(); wireKey = ''; tick();
+}
+const fmtDay = iso => fmtLocal(new Date(iso.length === 10 ? iso + 'T12:00:00Z' : iso), { day:'numeric', month:'short' });
+const isStale = (asOf, ok) => !asOf || ok === false || (Date.now() - new Date(asOf)) > CONFIG.staleAfterHours * 3600e3;
+function buildPolicyShell(){
+  $('#cbs').innerHTML = CONFIG.banks.map(b => `
     <div class="cb">
       <div>
-        <div class="cb-name"><i class="dot" style="background:${p.color}"></i><b>${p.k}</b><span class="kicker" style="letter-spacing:.08em">${p.full}</span></div>
-        <div class="cb-rate">${p.rate}<small>%</small></div>
-        <div class="cb-last">Last ${p.last}<br>Next <b>${p.nextLbl}</b> · in <b data-days="${p.next}">—</b></div>
+        <div class="cb-name"><i class="dot" style="background:${b.color}"></i><b>${b.label}</b><span class="kicker" style="letter-spacing:.08em">${b.full}</span></div>
+        <div class="cb-rate" id="rate-${b.k}">—</div>
+        <div class="cb-last" id="last-${b.k}">Waiting for data…</div>
       </div>
-      <div class="cb-mkt"><span class="kicker">${p.mktLbl}</span><div class="tv" data-tv="mkt-${p.k}" data-loading="Loading…"></div></div>
+      <div class="cb-mkt"><span class="kicker">${b.mktLbl}</span><div class="tv" data-tv="mkt-${b.k}" data-loading="Loading…"></div></div>
     </div>`).join('');
+}
+function renderPolicy(){
+  const P = DATA.policy || {};
+  CONFIG.banks.forEach(b => {
+    const d = P[b.k], rateEl = $('#rate-' + b.k), lastEl = $('#last-' + b.k);
+    if (!d || (d.rate == null && d.lower == null)){ rateEl.textContent = '—'; lastEl.innerHTML = `<span style="color:rgb(var(--hot))">No data${DATA.err ? ' · ' + DATA.err : ''}</span>`; return; }
+    const r = b.k === 'rba' ? d.rate.toFixed(2) : `${d.lower.toFixed(2)}–${d.upper.toFixed(2)}`;
+    rateEl.innerHTML = `${r}<small>%</small>`;
+    const lines = [];
+    if (d.action) lines.push(`Last <b>${d.action}</b>${d.decisionDate ? ' · ' + fmtDay(d.decisionDate) : ''}${d.vote ? ' · ' + d.vote + (d.vote === 'Unanimous' ? '' : ' vote') : ''}`);
+    if (b.k === 'fed' && d.effr != null) lines.push(`EFFR <b>${d.effr.toFixed(2)}</b> · ${fmtDay(d.effrDate)}`);
+    if (d.next) lines.push(`Next <b>${fmtDay(d.next)}</b> · in <b data-days="${d.next}">—</b>`);
+    if (isStale(d.asOf, d.ok)) lines.push(`<span style="color:rgb(var(--hot))">STALE · as of ${d.asOf ? fmtLocal(new Date(d.asOf), {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}) : '—'}</span>`);
+    lastEl.innerHTML = lines.join('<br>');
+  });
+  const asOf = P.rba?.asOf || P.fed?.asOf;
+  $('#polMeta').innerHTML = asOf ? `RBA · Fed · NY Fed<br>checked ${fmtLocal(new Date(asOf), {hour:'2-digit',minute:'2-digit',hour12:false})} ${CONFIG.tzLabel}` : 'Official sources<br><span class="dl">waiting for data</span>';
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -429,17 +439,18 @@ const countFlaps = [];
   const pair = [makeFlap(true), makeFlap(true)]; pair.forEach(f=>row.appendChild(f)); countFlaps.push(...pair);
   grp.appendChild(row); grp.insertAdjacentHTML('beforeend', `<span class="kicker">${g}</span>`); c.appendChild(grp);
 });
-const CN = { US:'US', AU:'Australia', CN:'China', UK:'UK' };
-function upcoming(now){ return CONFIG.events.map(e => ({...e, d:new Date(e.t)})).filter(e => e.d > now - 60e3).sort((a,b)=>a.d-b.d); }
+const CN = { US:'US', AU:'Australia', CN:'China', UK:'UK', EU:'Euro area', JP:'Japan', NZ:'NZ', CA:'Canada' };
+function upcoming(now){ return DATA.events.map(e => ({...e, d:new Date(e.t)})).filter(e => e.d > now - 60e3).sort((a,b)=>a.d-b.d); }
 function renderNext(now){
-  const evs = upcoming(now), hero = evs.find(e => e.imp === 'high') || evs[0]; if (!hero) return;
+  const evs = upcoming(now), hero = evs.find(e => e.imp === 'high') || evs[0];
+  if (!hero){ $('#nextTitle').innerHTML = 'Calendar <em>loading</em>'; $('#nextSub').textContent = DATA.err ? 'Data unavailable · ' + DATA.err : 'Waiting for data…'; return; }
   const code = hero.code.toUpperCase().padEnd(8,' ').slice(0,8); codeFlaps.forEach((f,i)=> setFlap(f, code[i]));
   const s = Math.max(0, Math.floor((hero.d - now)/1000));
   const str = [Math.floor(s/86400), Math.floor(s%86400/3600), Math.floor(s%3600/60), s%60].map(n=>String(Math.min(n,99)).padStart(2,'0')).join('');
   countFlaps.forEach((f,i)=> setFlap(f, str[i]));
-  const html = `${CN[hero.c] || hero.c} <em>${hero.name.replace(/^(China|UK) /,'')}</em>`;
+  const html = `${CN[hero.c] || hero.c} <em>${hero.name}</em>`;
   if ($('#nextTitle').innerHTML !== html) $('#nextTitle').innerHTML = html;
-  $('#nextSub').textContent = `${fmtLocal(hero.d,{weekday:'short',day:'numeric',month:'short'})} · ${fmtLocal(hero.d,{hour:'2-digit',minute:'2-digit',hour12:false})} ${CONFIG.tzLabel} · ${hero.desk}`;
+  $('#nextSub').textContent = `${fmtLocal(hero.d,{weekday:'short',day:'numeric',month:'short'})} · ${fmtLocal(hero.d,{hour:'2-digit',minute:'2-digit',hour12:false})} ${CONFIG.tzLabel}${hero.fc ? ' · Fcst ' + hero.fc : ''}${hero.pv ? ' · Prev ' + hero.pv : ''}`;
   $('#cal').innerHTML = evs.filter(e => e !== hero).slice(0, 4).map(e => `
     <div class="cal-row"><span class="cc ${e.c==='AU'?'au':''}">${e.c}</span>
       <span class="nm"><i class="imp ${e.imp==='high'?'':'med'}"></i>${e.name}</span>
@@ -450,12 +461,13 @@ function renderNext(now){
 let wireKey = '';
 function buildWire(now){
   const evs = upcoming(now).slice(0, 8);
-  const key = evs.map(e=>e.t+e.code).join(); if (key === wireKey) return; wireKey = key;
+  const key = evs.map(e=>e.t+e.code).join() + JSON.stringify(DATA.policy?.rba?.next || '') ; if (key === wireKey) return; wireKey = key;
   const today = fmtLocal(now,{day:'numeric',month:'numeric'});
   const html = evs.map(e => {
     const day = fmtLocal(e.d,{day:'numeric',month:'numeric'}) === today ? 'Today' : fmtLocal(e.d,{weekday:'short',day:'numeric',month:'short'});
-    return `<span><b>${day} ${fmtLocal(e.d,{hour:'2-digit',minute:'2-digit',hour12:false})}</b> · ${CN[e.c]||e.c} ${e.name.replace(/^(China|UK) /,'')}${e.imp==='high'?' · <b>high impact</b>':''}</span>`;
-  }).join('') + CONFIG.policy.map(p => `<span><b>${p.k}</b> ${p.rate}% · next decision ${p.nextLbl}</span>`).join('');
+    return `<span><b>${day} ${fmtLocal(e.d,{hour:'2-digit',minute:'2-digit',hour12:false})}</b> · ${CN[e.c]||e.c} ${e.name}${e.fc?' · fcst '+e.fc:''}${e.imp==='high'?' · <b>high impact</b>':''}</span>`;
+  }).join('') + CONFIG.banks.map(b => { const d = DATA.policy?.[b.k]; if (!d || !d.next) return ''; const r = b.k === 'rba' ? d.rate?.toFixed(2) : `${d.lower?.toFixed(2)}–${d.upper?.toFixed(2)}`; return `<span><b>${b.label}</b> ${r}% · next decision ${fmtDay(d.next)}</span>`; }).join('');
+  if (!html.trim()) return;
   const el = $('#wire'); el.innerHTML = html + html;
   requestAnimationFrame(()=> el.style.setProperty('--dur', Math.max(40, el.scrollWidth/2/70) + 's'));
 }
@@ -473,7 +485,8 @@ function applyView(){ document.body.classList.remove('view-all','view-fi','view-
 if (qs.get('desk')) $('#deskName').textContent = qs.get('desk');
 function tick(){ const now = new Date(); renderNext(now); renderSessions(now); buildWire(now); }
 
-applyView(); buildPolicy(); tick(); net();
+applyView(); buildPolicyShell(); tick(); net(); loadData();
+setInterval(loadData, CONFIG.dataRefreshMin * 60e3);
 document.fonts.ready.then(()=>{ embedAll(); wireKey=''; tick(); });
 setInterval(tick, 1000);
 let k = 0; setInterval(()=>{ k++; const dx=[0,1,1,0,-1,-1][k%6], dy=[0,0,1,1,1,0][k%6]; $('#app').style.transform = `translate(${dx}px,${dy}px)`; }, CONFIG.pixelShiftSec*1e3);
