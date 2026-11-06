@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
 <title>Markets Board · Fixed Income & Equities</title>
 <!-- fonts embedded so the board survives locked-down networks -->
 <style id="embedded-fonts">
@@ -102,6 +101,7 @@ body.idle{ cursor: none; }
 /* widget slots */
 .tv{ position: relative; flex: 1; min-height: 0; border-radius: 8px; overflow: hidden; }
 .tv .tradingview-widget-container, .tv .tradingview-widget-container__widget, .tv iframe{ width: 100% !important; height: 100% !important; }
+.tv iframe{ color-scheme: normal; background: transparent !important; border: 0; }
 .tv .tradingview-widget-copyright{ display: none; }
 .tv::before{ content: attr(data-loading); position: absolute; inset: 0; display: grid; place-items: center; font: 500 .72rem/1 var(--mono);
   letter-spacing: .12em; text-transform: uppercase; color: rgb(var(--paper) / .3); z-index: 0; }
@@ -312,7 +312,7 @@ const CONFIG = {
 const $ = (s, el=document) => el.querySelector(s);
 const qs = new URLSearchParams(location.search);
 const TV_BASE = 'https://s3.tradingview.com/external-embedding/embed-widget-';
-const COMMON = { colorTheme:'dark', isTransparent:true, locale:'en' };
+const COMMON = { colorTheme:'dark', theme:'dark', isTransparent:true, locale:'en', backgroundColor:'rgba(0,0,0,0)' };
 
 function embed(slot, widget, cfg){
   const host = typeof slot === 'string' ? $(`[data-tv="${slot}"]`) : slot; if (!host) return;
@@ -325,7 +325,7 @@ function embed(slot, widget, cfg){
 }
 const quotes = (rows) => rows.map(([s, d]) => ({ name: s, displayName: d }));
 const chartCfg = (symbol, extra={}) => ({
-  autosize: true, symbol, interval: '5', timezone: CONFIG.tz, theme: 'dark', style: '3', locale: 'en',
+  autosize: true, symbol, interval: '5', timezone: CONFIG.tz, theme: 'dark', colorTheme: 'dark', style: '3', locale: 'en', toolbar_bg: 'rgba(23, 22, 20, 1)',
   hide_top_toolbar: true, hide_side_toolbar: true, hide_legend: false, allow_symbol_change: false,
   save_image: false, calendar: false, hide_volume: true, withdateranges: false,
   backgroundColor: 'rgba(23, 22, 20, 1)', gridColor: 'rgba(238, 233, 222, 0.06)',
